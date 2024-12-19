@@ -23,6 +23,13 @@ Route::get('/rentalstats', function () {
     return view('rentalstats');
 })->middleware(['auth', 'verified'])->name('rentalstats');
 
+Route::get('/style.css', function () {
+    return response()
+        ->file(resource_path('css/style.css'), [
+            'Content-Type' => 'text/css'
+        ]);
+})->name('style.css');
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
