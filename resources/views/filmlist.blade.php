@@ -1,111 +1,231 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Liste des films') }}
-        </h2>
-    </x-slot>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RFTG - Liste des films</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript>
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    </noscript>
+    <style>
+        :root {
+            --background-color: #f0f4f8;
+            --text-color: #2d3748;
+            --app-background: #ffffff;
+            --app-shadow: rgba(0,0,0,0.1);
+            --input-border: #cbd5e0;
+            --button-bg: #4299e1;
+            --button-text: white;
+            --table-border: #e2e8f0;
+            --table-header-bg: #4299e1;
+            --table-header-text: white;
+            --table-even-row: #edf2f7;
+        }
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl rounded-lg border border-gray-200 dark:border-gray-700">
-                <div class="p-8 text-gray-900 dark:text-gray-100">
-                    <br>
-                    <br>
-                    <h1 class="text-3xl font-bold mb-12 text-[#ff2d20] dark:text-[#ff2d20] text-center mx-auto my-8">{{ __("Voici la liste des films disponibles.") }}</h1>
-                    <br>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-                    <br>
+        body {
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.8;
+        }
 
-                    <div class="overflow-x-auto mx-8">
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" style="margin: 20px;">
-                            @php
-                                $currentPage = request()->get('page', 1);
-                                $perPage = 9; // Changé à 9 pour un meilleur affichage en grille
-                                $response = file_get_contents('http://localhost:8080/toad/film/all');
-                                $films = json_decode($response);
-                                $totalFilms = count($films);
-                                $totalPages = ceil($totalFilms / $perPage);
-                                $films = array_slice($films, ($currentPage - 1) * $perPage, $perPage);
-                            @endphp
-                            @if(isset($films) && count($films) > 0)
-                                @foreach ($films as $film)
-                                    <a href="{{ url('/filmdetail?id=' . $film->filmId) }}" class="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700 hover:shadow-xl transition duration-300 ease-in-out transform hover:-translate-y-1 cursor-pointer">
-                                        <div class="p-6">
-                                            <h3 class="text-xl font-bold text-[#ff2d20] dark:text-[#ff2d20] mb-2">{{ $film->title }}</h3>
-                                            <div class="text-sm text-gray-600 dark:text-gray-400 mb-4">ID: {{ $film->filmId }}</div>
-                                            <p class="text-gray-700 dark:text-gray-300 mb-4 line-clamp-3">{{ $film->description }}</p>
-                                            <div class="grid grid-cols-2 gap-4 text-sm">
-                                                <div>
-                                                    <span class="font-semibold">Année:</span>
-                                                    <span class="text-gray-600 dark:text-gray-400">{{ $film->releaseYear }}</span>
-                                                </div>
-                                                <div>
-                                                    <span class="font-semibold">Durée location:</span>
-                                                    <span class="text-gray-600 dark:text-gray-400">{{ $film->rentalDuration }} jours</span>
-                                                </div>
-                                                <div>
-                                                    <span class="font-semibold">Tarif:</span>
-                                                    <span class="text-gray-600 dark:text-gray-400">{{ $film->rentalRate }}€</span>
-                                                </div>
-                                                <div>
-                                                    <span class="font-semibold">Évaluation:</span>
-                                                    <span class="text-gray-600 dark:text-gray-400">{{ $film->rating }}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </a>
-                                @endforeach
-                            @else
-                                <div class="col-span-3 text-center text-gray-500 dark:text-gray-400 py-8">
-                                    Aucun film disponible
-                                </div>
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        h1, h2, h3 {
+            color: var(--text-color);
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        h1 { font-size: clamp(2em, 5vw, 3em); }
+        h2 { font-size: clamp(1.5em, 4vw, 2.5em); }
+        h3 { font-size: clamp(1.2em, 3vw, 2em); }
+
+        .app-section {
+            background-color: var(--app-background);
+            border-radius: 20px;
+            padding: clamp(20px, 5vw, 50px);
+            margin-bottom: 60px;
+            box-shadow: 0 15px 35px var(--app-shadow);
+            will-change: transform;
+        }
+
+        .app-title {
+            color: var(--button-bg);
+            border-bottom: 4px solid var(--button-bg);
+            padding-bottom: 20px;
+            margin-bottom: 50px;
+            text-align: center;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            contain: content;
+        }
+
+        .film-card {
+            background-color: var(--app-background);
+            border-radius: 12px;
+            box-shadow: 0 5px 15px var(--app-shadow);
+            padding: 20px;
+            cursor: pointer;
+            transform: translateZ(0);
+            will-change: transform;
+            transition: transform 0.3s ease;
+        }
+
+        .film-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .film-title {
+            color: var(--button-bg);
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .film-details {
+            color: var(--text-color);
+            margin-bottom: 10px;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 5px;
+        }
+
+        .pagination a {
+            padding: 10px 15px;
+            border: 1px solid var(--table-border);
+            border-radius: 5px;
+            text-decoration: none;
+            color: var(--text-color);
+            transition: background-color 0.3s;
+        }
+
+        .pagination a:hover {
+            background-color: var(--button-bg);
+            color: var(--button-text);
+        }
+
+        .filter-button {
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .bottom-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .film-label {
+            font-weight: 600;
+            color: #4299e1;
+            margin-right: 5px;
+            font-size: 0.9em;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .film-card {
+                transition: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>RFTG - Liste des films</h1>
+        <div class="app-section">
+            <h2 class="app-title">Voici la liste des films disponibles</h2>
+
+            <div class="grid">
+                @php
+                    $currentPage = request()->get('page', 1);
+                    $ch = curl_init();
+                    curl_setopt_array($ch, [
+                        CURLOPT_URL => 'http://localhost:8080/toad/film/page?page=' . $currentPage,
+                        CURLOPT_RETURNTRANSFER => true,
+                        CURLOPT_CONNECTTIMEOUT => 3,
+                        CURLOPT_TIMEOUT => 5
+                    ]);
+                    $response = curl_exec($ch);
+                    curl_close($ch);
+                    
+                    $data = json_decode($response, false);
+                    $films = $data->films ?? [];
+                    $totalPages = $data->totalPages ?? 0;
+                    $totalFilms = $data->totalFilms ?? 0;
+                @endphp
+                @forelse ($films as $film)
+                    <div class="film-card" onclick="window.location='{{ url('/filmdetail?id=' . $film->filmId) }}'">
+                        <h3 class="film-title">{{ $film->title }}</h3>
+                        <p class="film-details line-clamp-3">{{ $film->description }}</p>
+                        <div class="film-details">
+                            <span class="film-label">Année:</span> {{ $film->releaseYear }}<br>
+                            <span class="film-label">Durée location:</span> {{ $film->rentalDuration }} jours<br>
+                            <span class="film-label">Tarif:</span> {{ $film->rentalRate }}€<br>
+                            <span class="film-label">Évaluation:</span> {{ $film->rating }}<br>
+                            <span class="film-label">Durée:</span> {{ $film->length }} minutes<br>
+                            <span class="film-label">Coût de remplacement:</span> {{ $film->replacementCost }}€<br>
+                            @if(!empty($film->specialFeatures))
+                                <span class="film-label">Bonus:</span> {{ $film->specialFeatures }}
                             @endif
                         </div>
                     </div>
-                    <div class="mt-6 flex justify-center">
-                        <nav class="relative z-0 inline-flex shadow-sm rounded-md">
-                            @if($currentPage > 1)
-                            <a href="?page=1" class="relative inline-flex items-center px-4 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 transition ease-in-out duration-150">
-                                &lt;&lt;
-                            </a>
-                            <a href="?page={{ $currentPage - 1 }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 transition ease-in-out duration-150">
-                                &lt;
-                            </a>
-                            @endif
-
-                            @php
-                                $start = max(1, min($currentPage - 2, $totalPages - 4));
-                                $end = min($totalPages, max(5, $currentPage + 2));
-                            @endphp
-
-                            @for ($i = $start; $i <= $end; $i++)
-                                <a href="?page={{ $i }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 {{ $i == $currentPage ? 'bg-[#ff2d20] text-white border-[#ff2d20]' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600' }} text-sm font-medium transition ease-in-out duration-150">
-                                    {{ $i }}
-                                </a>
-                            @endfor
-
-                            @if($end < $totalPages)
-                                <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200">...</span>
-                            @endif
-
-                            @if($currentPage < $totalPages)
-                            <a href="?page={{ $currentPage + 1 }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 transition ease-in-out duration-150">
-                                &gt;
-                            </a>
-                            <a href="?page={{ $totalPages }}" class="relative inline-flex items-center px-4 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 transition ease-in-out duration-150">
-                                &gt;&gt;
-                            </a>
-                            @endif
-                        </nav>
+                @empty
+                    <div class="col-span-3 text-center text-gray-500 dark:text-gray-400 py-8">
+                        Aucun film disponible
                     </div>
-                    <br>
-
-                    <br>
-
-                    <br>
-
-                </div>
+                @endforelse
             </div>
+            @if($totalPages > 0)
+                <div class="bottom-controls">
+                    <div class="pagination">
+                        @if($currentPage > 1)
+                            <a href="?page=1">&lt;&lt;</a>
+                            <a href="?page={{ $currentPage - 1 }}">&lt;</a>
+                        @endif
+
+                        @for ($i = max(1, $currentPage - 2); $i <= min($totalPages, $currentPage + 2); $i++)
+                            <a href="?page={{ $i }}" class="{{ $i == $currentPage ? 'active' : '' }}">{{ $i }}</a>
+                        @endfor
+
+                        @if($currentPage < $totalPages)
+                            <a href="?page={{ $currentPage + 1 }}">&gt;</a>
+                            <a href="?page={{ $totalPages }}">&gt;&gt;</a>
+                        @endif
+                    </div>
+                    <button class="filter-button" onclick="window.location.href='/rentalstats'">Afficher les détails de locations</button>
+                </div>
+            @endif
         </div>
     </div>
-</x-app-layout>
+</body>
+</html>

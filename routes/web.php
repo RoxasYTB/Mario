@@ -19,6 +19,10 @@ Route::get('/filmdetail', function () {
     return view('filmdetail');
 })->middleware(['auth', 'verified'])->name('filmdetail');
 
+Route::get('/rentalstats', function () {
+    return view('rentalstats');
+})->middleware(['auth', 'verified'])->name('rentalstats');
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
