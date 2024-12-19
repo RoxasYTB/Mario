@@ -30,6 +30,14 @@ Route::get('/style.css', function () {
         ]);
 })->name('style.css');
 
+Route::get('/research', function () {
+    return view('components.research-component');
+})->middleware(['auth', 'verified'])->name('research');
+
+Route::get('/search-filter', function () {
+    return view('components.search-filter');
+})->middleware(['auth', 'verified'])->name('search-filter');
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
