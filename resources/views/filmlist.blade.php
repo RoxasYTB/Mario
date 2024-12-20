@@ -15,26 +15,55 @@
             <x-research-component :page="'filmlist'" />
             <div class="grid">
                 @php
-                    $currentPage = request()->get('page', 1); $sort = request('sort', 'title_asc');
-                    $search = request('search', ''); $start_year = request('start_year', '2006');
+                    $currentPage = request()->get('page', 1);
+                    $sort = request('sort', 'title_asc');
+                    $search = request('search', '');
+                    $start_year = request('start_year', '2006');
                     $end_year = request('end_year', date('Y'));
                     
                     if($start_year > $end_year) {
                         echo "<div class='alert alert-danger'>L'année de début ne peut pas être supérieure à l'année de fin</div>";
                     } else {
-                        $ch = curl_init();
-                        curl_setopt_array($ch, [
-                            CURLOPT_URL => 'http://localhost:8080/toad/film/page?page=' . $currentPage . 
-                                         '&sort=' . $sort . '&search=' . urlencode($search) .
-                                         '&start_year=' . urlencode($start_year) . '&end_year=' . urlencode($end_year),
-                            CURLOPT_RETURNTRANSFER => true, CURLOPT_CONNECTTIMEOUT => 3, CURLOPT_TIMEOUT => 5
-                        ]);
-                        $response = curl_exec($ch); curl_close($ch);
-                        $data = json_decode($response, false); $films = $data->films ?? [];
-                        if (!empty($search)) {
-                            $films = array_filter($films, fn($film) => stripos($film->title, $search) !== false);
+                        try {
+                            $ch = curl_init();
+                            $url = 'http://localhost:8080/toad/film/page?' . http_build_query([
+                                'page' => $currentPage,
+                                'sort' => $sort,
+                                'search' => $search,
+                                'start_year' => $start_year,
+                                'end_year' => $end_year
+                            ]);
+                            
+                            curl_setopt_array($ch, [
+                                CURLOPT_URL => $url,
+                                CURLOPT_RETURNTRANSFER => true,
+                                CURLOPT_CONNECTTIMEOUT => 3,
+                                CURLOPT_TIMEOUT => 5
+                            ]);
+                            
+                            $response = curl_exec($ch);
+                            
+                            if($response === false) {
+                                throw new Exception('Erreur curl: ' . curl_error($ch));
+                            }
+                            
+                            curl_close($ch);
+                            
+                            $data = json_decode($response);
+                            if(json_last_error() !== JSON_ERROR_NONE) {
+                                throw new Exception('Erreur décodage JSON: ' . json_last_error_msg());
+                            }
+                            
+                            $films = $data->films ?? [];
+                            $totalPages = $data->totalPages ?? 0;
+                            $totalFilms = $data->totalFilms ?? 0;
+                            
+                        } catch(Exception $e) {
+                            echo "<div class='alert alert-danger'>Erreur lors de la récupération des films: " . $e->getMessage() . "</div>";
+                            $films = [];
+                            $totalPages = 0;
+                            $totalFilms = 0;
                         }
-                        $totalPages = $data->totalPages ?? 0; $totalFilms = $data->totalFilms ?? 0;
                     }
                 @endphp
 

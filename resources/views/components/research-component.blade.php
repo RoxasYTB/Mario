@@ -21,7 +21,7 @@
                    value="{{ $searchValue }}" 
                    style="width: 100%;">
             @if($searchValue)
-                <span class="clear-search" onclick="window.location.href='?sort={{ $currentSort }}{{ $isFilmList ? '&start_year='.request('start_year', '2006').'&end_year='.request('end_year', date('Y')) : '' }}'">✕</span>
+                <span class="clear-search" onclick="window.location.href='?sort={{ $currentSort }}&start_year={{ request('start_year', '2006') }}&end_year={{ request('end_year', '2006') }}&search='">✕</span>
             @endif
         </div>
 
@@ -32,6 +32,7 @@
                     $startYear = request('start_year', '2006');
                     $endYear = request('end_year', $currentYear);
                 @endphp
+                <div style="display: none; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
                 <input type="number" 
                        id="start_year" 
                        name="start_year" 
@@ -49,6 +50,7 @@
                        value="{{ $endYear }}" 
                        title="Année de fin" 
                        placeholder="Année fin">
+                </div>
             @else
                 @php 
                     $response = file_get_contents('http://localhost:8080/toad/rental/sort');
