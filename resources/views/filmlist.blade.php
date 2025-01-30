@@ -68,7 +68,7 @@
                 @endphp
 
                 @forelse ($films as $film)
-                    <div class="film-card" onclick="window.location='{{ url('/filmdetail?id=' . $film->filmId) }}'">
+                    <div class="film-card">
                         <h3 class="film-title">{{ $film->title }}</h3>
                         <p class="film-details line-clamp-3">{{ $film->description }}</p>
                         <div class="film-details">
@@ -81,6 +81,11 @@
                             @if(!empty($film->specialFeatures))
                                 <span class="film-label">Bonus:</span> {{ $film->specialFeatures }}
                             @endif
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-top: 15px;">
+                            <a href="#" class="button" style="flex: 1; text-align: center;">Modifier</a>
+                            <a href="#" class="button" style="flex: 1; text-align: center;">Supprimer</a>
+                            <a href="{{ url('/filmdetail?id=' . $film->filmId) }}" class="button" style="flex: 1; text-align: center;">Détails</a>
                         </div>
                     </div>
                 @empty
