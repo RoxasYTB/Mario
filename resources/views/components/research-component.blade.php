@@ -86,18 +86,26 @@
             <button type="submit" class="button" style="white-space: nowrap;">Rechercher</button>
         </div>
 
-        {{-- Menu déroulant pour le tri (temporairement désactivé)
         <select name="sort" onchange="this.form.submit()" class="sort-select" style="min-width: 150px; display: none;">
             @if($isFilmList)
                 @php
-                    $sortOptions = [
-                        'title_asc' => 'Titre (A-Z)',
-                        'title_desc' => 'Titre (Z-A)',
-                        'year_asc' => 'Année (Croissant)',
-                        'year_desc' => 'Année (Décroissant)',
-                        'duration_asc' => 'Durée (Croissant)',
-                        'duration_desc' => 'Durée (Décroissant)'
-                    ];
+                    try {
+                        $sortOptions = @file_get_contents('http://localhost:8080/toad/rental/sort');
+                        $sortOptions = json_decode($sortOptions, true) ?? [
+                            'title_asc' => 'Titre (A-Z)',
+                            'title_desc' => 'Titre (Z-A)',
+                            'year_asc' => 'Année (Ancien-Récent)',
+                            'year_desc' => 'Année (Récent-Ancien)'
+                        ];
+                    } catch (Exception $e) {
+                        // Options de tri par défaut en cas d'erreur
+                        $sortOptions = [
+                            'title_asc' => 'Titre (A-Z)',
+                            'title_desc' => 'Titre (Z-A)',
+                            'year_asc' => 'Année (Ancien-Récent)',
+                            'year_desc' => 'Année (Récent-Ancien)'
+                        ];
+                    }
                 @endphp
                 @foreach($sortOptions as $value => $label)
                     <option value="{{ $value }}" {{ $currentSort == $value ? 'selected' : '' }}>{{ $label }}</option>
@@ -120,8 +128,7 @@
                 @endforeach
             @endif
         </select>
-        --}}
-    </form>
+       </form>
 </div>
 
 @if($isFilmList)

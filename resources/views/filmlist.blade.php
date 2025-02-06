@@ -68,10 +68,10 @@
                 @endphp
 
                 @forelse ($films as $film)
-                    <div class="film-card">
+                    <div class="film-card" style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%;">
                         <h3 class="film-title">{{ $film->title }}</h3>
                         <p class="film-details line-clamp-3">{{ $film->description }}</p>
-                        <div class="film-details">
+                        <div class="film-details" style="text-align: center;">
                             <span class="film-label">Année:</span> {{ $film->releaseYear }}<br>
                             <span class="film-label">Durée location:</span> {{ $film->rentalDuration }} jours<br>
                             <span class="film-label">Tarif:</span> {{ $film->rentalRate }}€<br>
@@ -82,10 +82,12 @@
                                 <span class="film-label">Bonus:</span> {{ $film->specialFeatures }}
                             @endif
                         </div>
-                        <div style="display: flex; gap: 10px; margin-top: 15px;">
-                            <a href="#" class="button" style="flex: 1; text-align: center;">Modifier</a>
-                            <a href="#" class="button" style="flex: 1; text-align: center;">Supprimer</a>
-                            <a href="{{ url('/filmdetail?id=' . $film->filmId) }}" class="button" style="flex: 1; text-align: center;">Détails</a>
+                        <div style="display: flex; gap: 10px; margin-top: 15px; justify-content: center;">
+                            <div style="display: flex; flex-direction: column; gap: 10px;">
+                                <a href="#" class="button" style="text-align: center;">Modifier</a>
+                                <a href="#" class="button" style="text-align: center;">Supprimer</a>
+                                <a href="{{ url('/filmdetail?id=' . $film->filmId) }}" class="button" style="text-align: center;">Détails</a>
+                            </div>
                         </div>
                     </div>
                 @empty
