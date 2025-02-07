@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,7 +17,7 @@
             --background-color: #f0f4f8;
             --text-color: #2d3748;
             --app-background: #ffffff;
-            --app-shadow: rgba(0,0,0,0.1);
+            --app-shadow: rgba(0, 0, 0, 0.1);
             --input-border: #cbd5e0;
             --button-bg: #4299e1;
             --button-text: white;
@@ -50,6 +51,15 @@
             padding: 50px;
             margin-bottom: 60px;
             box-shadow: 0 15px 35px var(--app-shadow);
+        }
+
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
         }
 
         .film-title {
@@ -94,6 +104,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <h1>{{ __("Détails du film") }}</h1>
@@ -101,29 +112,52 @@
         <div class="film-detail">
             @php
                 $filmId = request()->get('id');
-                $response = file_get_contents("http://localhost:8080/toad/film/getById?id={$filmId}");
-                $film = json_decode($response);
+                $action = request()->get('action');
+                $film = null;
+
+                if ($action === 'edit') {
+                    $response = file_get_contents("http://localhost:8080/toad/film/getById?id={$filmId}");
+                    $film = json_decode($response);
+                }
             @endphp
 
-            @if(isset($film))
+            @if(session('error'))
+                <div class="error-message">
+                    {{ session('error') }}
+                </div>
+            @endif
+
+            <form id="updateFilmForm" action="{{ url($action === 'edit' ? '/updateFilm/' . $filmId : '/addFilm') }}" method="POST">
+                @csrf
+                @if($action === 'edit')
+                    @method('PUT')
+                    <input type="hidden" name="idDirector" value="{{ $film->idDirector }}">
+                @endif
                 <div class="info-section">
-                    <h4 class="film-title">{{ $film->title }}</h4>
-                    <input type="text" value="{{ $film->description }}" disabled>
+                    <h4>Informations générales</h4>
+                    <div>
+                        <label>Titre:</label>
+                        <input type="text" name="title" value="{{ $action === 'edit' ? $film->title : '' }}">
+                    </div>
+                    <div>
+                        <label>Description:</label>
+                        <input type="text" name="description" value="{{ $action === 'edit' ? $film->description : '' }}">
+                    </div>
                 </div>
 
                 <div class="info-section">
                     <h4>Informations générales</h4>
                     <div>
                         <label>Année de sortie:</label>
-                        <input type="text" value="{{ $film->releaseYear }}" disabled>
+                        <input type="text" name="releaseYear" value="{{ $action === 'edit' ? $film->releaseYear : '' }}">
                     </div>
                     <div>
                         <label>Durée:</label>
-                        <input type="text" value="{{ $film->length }} minutes" disabled>
+                        <input type="text" name="length" value="{{ $action === 'edit' ? $film->length : '' }}">
                     </div>
                     <div>
                         <label>Classification:</label>
-                        <input type="text" value="{{ $film->rating }}" disabled>
+                        <input type="text" name="rating" value="{{ $action === 'edit' ? $film->rating : '' }}">
                     </div>
                 </div>
 
@@ -131,32 +165,32 @@
                     <h4>Informations de location</h4>
                     <div>
                         <label>Durée de location:</label>
-                        <input type="text" value="{{ $film->rentalDuration }} jours" disabled>
+                        <input type="text" name="rentalDuration" value="{{ $action === 'edit' ? $film->rentalDuration : '' }}">
                     </div>
                     <div>
                         <label>Tarif de location:</label>
-                        <input type="text" value="{{ $film->rentalRate }}€" disabled>
+                        <input type="text" name="rentalRate" value="{{ $action === 'edit' ? $film->rentalRate : '' }}">
                     </div>
                     <div>
                         <label>Coût de remplacement:</label>
-                        <input type="text" value="{{ $film->replacementCost }}€" disabled>
+                        <input type="text" name="replacementCost" value="{{ $action === 'edit' ? $film->replacementCost : '' }}">
                     </div>
                 </div>
 
-                @if($film->specialFeatures)
+                @if($action === 'edit' && $film->specialFeatures)
                     <div class="info-section">
                         <h4>Fonctionnalités spéciales</h4>
                         <input type="text" value="{{ $film->specialFeatures }}" disabled>
                     </div>
                 @endif
 
-                <a href="http://localhost:8000/filmlist" class="button">Retour à la liste des films</a>
-            @else
-                <div class="text-center">
-                    <p>Film non trouvé</p>
+                <div class="button-container" style="display: flex; justify-content: space-between;">
+                    <a href="{{ route('filmlist') }}" class="button">Retour à la liste des films</a>
+                    <button type="submit" class="button" style="zoom: 1.25;">{{ $action === 'edit' ? 'Modifier' : 'Ajouter' }}</button>
                 </div>
-            @endif
+            </form>
         </div>
     </div>
 </body>
+
 </html>

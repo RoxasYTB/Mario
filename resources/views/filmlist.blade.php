@@ -68,26 +68,41 @@
                 @endphp
 
                 @forelse ($films as $film)
-                    <div class="film-card" style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%;">
+                    <div class="film-card">
                         <h3 class="film-title">{{ $film->title }}</h3>
                         <p class="film-details line-clamp-3">{{ $film->description }}</p>
-                        <div class="film-details" style="text-align: center;">
-                            <span class="film-label">Année:</span> {{ $film->releaseYear }}<br>
-                            <span class="film-label">Durée location:</span> {{ $film->rentalDuration }} jours<br>
-                            <span class="film-label">Tarif:</span> {{ $film->rentalRate }}€<br>
-                            <span class="film-label">Évaluation:</span> {{ $film->rating }}<br>
-                            <span class="film-label">Durée:</span> {{ $film->length }} minutes<br>
-                            <span class="film-label">Coût de remplacement:</span> {{ $film->replacementCost }}€<br>
+                        <div class="film-details" style="display: flex; flex-direction: column; align-items: left;">
+                            <div style="display: flex; align-items: center; gap: 5px;">
+                                <span class="film-label">Année:</span> {{ $film->releaseYear }}
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 5px;">
+                                <span class="film-label">Durée location:</span> {{ $film->rentalDuration }} jours
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 5px;">
+                                <span class="film-label">Tarif:</span> {{ $film->rentalRate }}€
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 5px;">
+                                <span class="film-label">Évaluation:</span> {{ $film->rating }}
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 5px;">
+                                <span class="film-label">Durée:</span> {{ $film->length }} minutes
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 5px;">
+                                <span class="film-label">Coût de remplacement:</span> {{ $film->replacementCost }}€
+                            </div>
                             @if(!empty($film->specialFeatures))
+                            <div style="display: flex; align-items: center; gap: 5px;">
                                 <span class="film-label">Bonus:</span> {{ $film->specialFeatures }}
+                            </div>
                             @endif
                         </div>
-                        <div style="display: flex; gap: 10px; margin-top: 15px; justify-content: center;">
-                            <div style="display: flex; flex-direction: column; gap: 10px;">
-                                <a href="#" class="button" style="text-align: center;">Modifier</a>
-                                <a href="#" class="button" style="text-align: center;">Supprimer</a>
-                                <a href="{{ url('/filmdetail?id=' . $film->filmId) }}" class="button" style="text-align: center;">Détails</a>
-                            </div>
+                        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
+                            <a href="{{ url('/filmdetail?id=' . $film->filmId) . "&action=edit" }}" class="button" style="text-align: center; display: flex; align-items: center; justify-content: center;">Modifier</a>
+                            <form action="http://localhost:8000/films/{{ $film->filmId }}" method="POST" style="display:inline;">
+                                <input type="hidden" name="_token" value="{{ csrf_token() }}" autocomplete="off">
+                                <input type="hidden" name="_method" value="DELETE">
+                                <button type="submit" class="button" onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce film ?')" style="font-size: 17px;width: 290px;height: 49px;">Supprimer</button>
+                            </form>
                         </div>
                     </div>
                 @empty
@@ -119,4 +134,27 @@
             @endif
         </div>
     </div>
+    <script>
+        function deleteFilm(filmId) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer ce film ?')) {
+                fetch(`http://localhost:8080/toad/film/delete/${filmId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                })
+                .then(response => {
+                    if (response.ok) {
+                        alert('Film supprimé avec succès');
+                        location.reload(); // Recharger la page pour mettre à jour la liste
+                    } else {
+                        alert('Erreur lors de la suppression du film');
+                    }
+                })
+                .catch(error => {
+                    alert('Erreur: ' + error.message);
+                });
+            }
+        }
+    </script>
 </body></html>
