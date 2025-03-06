@@ -131,7 +131,6 @@
                 @csrf
                 @if($action === 'edit')
                     @method('PUT')
-                    <input type="hidden" name="idDirector" value="{{ $film->idDirector }}">
                 @endif
                 <div class="info-section">
                     <h4>Informations générales</h4>
