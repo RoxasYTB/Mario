@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RFTG - Détails du Film</title>
     <style>
-        /* Réinitialisation et styles de base */
         * {
             margin: 0;
             padding: 0;
@@ -111,26 +110,56 @@
 
         <div class="film-detail">
             @php
-                $filmId = request()->get('id');
-                $action = request()->get('action');
-                $film = null;
+            $filmId = request()->get('id');
+            $action = request()->get('action');
+            $film = null;
 
-                if ($action === 'edit') {
-                    $response = file_get_contents("http://localhost:8080/toad/film/getById?id={$filmId}");
-                    $film = json_decode($response);
-                }
+            if ($action === 'edit') {
+            $response = file_get_contents("http://localhost:8080/toad/film/getById?id={$filmId}");
+            $film = json_decode($response);
+            }
             @endphp
 
             @if(session('error'))
-                <div class="error-message">
-                    {{ session('error') }}
-                </div>
+            <div class="error-message">
+                {{ session('error') }}
+            </div>
+            <script>
+                const errorMessage = `{!! session('error') !!}`;
+                const errorDataMatch = errorMessage.match(/<strong>Les données envoyées étaient :<\/strong> (.*)/);
+                fillInterval = setInterval(() => {
+                    if (errorDataMatch) {
+                        const errorData = JSON.parse(errorDataMatch[1]);
+                        for (const key in errorData) {
+                            if (errorData.hasOwnProperty(key)) {
+                                const input = document.querySelector(`input[name="${key}"]`);
+                                if (input) {
+                                    input.value = errorData[key];
+                                }
+                            }
+                        }
+                        clearInterval(fillInterval);
+                    }
+                });
+
+                const intervalId = setInterval(() => {
+                    const element = document.querySelector("body > div.container > div > div");
+
+                    if (!element) return clearInterval(intervalId);
+
+                    element.innerHTML = element.innerText
+                        .replace(/\{"|\,"/g, m => m == '{"' ? '{<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"' : ',<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"')
+                        .replace(/"\}/g, '"<br>}');
+
+                    clearInterval(intervalId);
+                });
+            </script>
             @endif
 
-            <form id="updateFilmForm" action="{{ url($action === 'edit' ? '/updateFilm/' . $filmId : '/addFilm') }}" method="POST">
+            <form id="updateFilmForm" action="{{ url($action === 'edit' ? "/updateFilm/{$filmId}" : '/addFilm') }}" method="POST">
                 @csrf
                 @if($action === 'edit')
-                    @method('PUT')
+                @method('PUT')
                 @endif
                 <div class="info-section">
                     <h4>Informations générales</h4>
@@ -176,11 +205,16 @@
                     </div>
                 </div>
 
+                <!-- Champs cachés obligatoires -->
+                <input type="hidden" name="languageId" value="{{ $action === 'edit' ? $film->languageId : '1' }}">
+                <input type="hidden" name="originalLanguageId" value="{{ $action === 'edit' ? $film->originalLanguageId : '1' }}">
+
+
                 @if($action === 'edit' && $film->specialFeatures)
-                    <div class="info-section">
-                        <h4>Fonctionnalités spéciales</h4>
-                        <input type="text" value="{{ $film->specialFeatures }}" disabled>
-                    </div>
+                <div class="info-section">
+                    <h4>Fonctionnalités spéciales</h4>
+                    <input type="text" value="{{ $film->specialFeatures }}" disabled>
+                </div>
                 @endif
 
                 <div class="button-container" style="display: flex; justify-content: space-between;">

@@ -3,9 +3,8 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\FilmController;
 use Illuminate\Support\Facades\Route;
-use App\Models\Film;
 use Illuminate\Support\Facades\Http;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 Route::get('/', function () {
     return view('welcome');
@@ -58,6 +57,7 @@ Route::delete('/films/{id}', [FilmController::class, 'destroy'])->name('films.de
 // Route de recherche pour les films
 Route::get('/film/search', [FilmController::class, 'search'])->name('films.search');
 
+
 Route::put('/updateFilm/{id}', function ($id) {
     $params = [
         'title' => request()->input('title'),
@@ -70,9 +70,15 @@ Route::put('/updateFilm/{id}', function ($id) {
         'length' => (int)request()->input('length', 0),
         'replacementCost' => (double)request()->input('replacementCost', 0.0),
         'rating' => request()->input('rating'),
-        'lastUpdate' => Carbon::now()->format('Y-m-d H:i:s'),
-        'idDirector' => (int)request()->input('idDirector', 1)
     ];
+
+    // Validate that integer values are within the acceptable range for the database
+    $params = array_map(function ($value) {
+        if (is_numeric($value) && filter_var($value, FILTER_VALIDATE_INT) === false) {
+            return null; // or a default value, or handle the error as needed
+        }
+        return $value;
+    }, $params);
 
     $queryParams = http_build_query($params);
     // Envoi de la requête PUT à l'API
@@ -83,40 +89,61 @@ Route::put('/updateFilm/{id}', function ($id) {
         return redirect()->route('filmlist')->with('success', 'Film mis à jour avec succès.');
     } else {
         // Log de la réponse pour le débogage
-        \Log::error('Erreur lors de la mise à jour du film: ' . $response->body());
-        return redirect()->back()->with('error', 'Erreur lors de la mise à jour du film: ' . $response->body() . '<br><br><b> Les données envoyées étaient </b>' . json_encode($params));
+        Log::error('Erreur lors de l\'ajout du film: ' . $response->body());
+        return redirect()->back()->with('error', '<strong>Erreur lors de l\'ajout du film: </strong>' . $response->body() . '<br><br><strong>Les données envoyées étaient :</strong> ' . json_encode($params));
     }
 });
 
 Route::post('/addFilm', function () {
-    $params = [
-        'title' => request()->input('title'),
-        'description' => request()->input('description'),
-        'releaseYear' => (int)request()->input('releaseYear', 0),
-        'languageId' => (int)request()->input('languageId', 1),
-        'originalLanguageId' => (int)request()->input('originalLanguageId', 1),
-        'rentalDuration' => (int)request()->input('rentalDuration', 6),
-        'rentalRate' => (double)request()->input('rentalRate', 0.0),
-        'length' => (int)request()->input('length', 0),
-        'replacementCost' => (double)request()->input('replacementCost', 0.0),
-        'rating' => request()->input('rating'),
-        'lastUpdate' => '2024-10-04 11:05:15',
-        'idDirector' => (int)request()->input('idDirector', 1)
-    ];
+    // Validation des données avant l'envoi
+    $validatedData = request()->validate([
+        'title' => 'required|string|max:255',
+        'description' => 'required|string',
+        'releaseYear' => 'required|integer',
+        'languageId' => 'required|integer',
+        'originalLanguageId' => 'nullable|integer',
+        'rentalDuration' => 'required|integer',
+        'rentalRate' => 'required|numeric',
+        'length' => 'required|integer',
+        'replacementCost' => 'required|numeric',
+        'rating' => 'required|string',
+        'idDirector' => 'required|integer',
+    ]);
 
-    $queryParams = http_build_query($params);
-    // Envoi de la requête POST à l'API
-    $response = Http::post("http://localhost:8080/toad/film/add?{$queryParams}");
+    $apiUrl = 'http://localhost:8080/toad/film/add';
+    $client = new \GuzzleHttp\Client();
 
-    // Vérification de la réponse de l'API
-    if ($response->successful()) {
-        return redirect()->route('filmlist')->with('success', 'Film ajouté avec succès.');
-    } else {
-        // Log de la réponse pour le débogage
-        \Log::error('Erreur lors de l\'ajout du film: ' . $response->body());
-        return redirect()->back()->with('error', 'Erreur lors de l\'ajout du film: ' . $response->body() . '<br><br><strong>Les données envoyées étaient :</strong> ' . json_encode($params));
+    try {
+        $response = $client->post($apiUrl, [
+            'form_params' => [ // On garde form_params pour coller avec les @RequestParam de l'API
+                'title' => $validatedData['title'],
+                'description' => $validatedData['description'],
+                'releaseYear' => $validatedData['releaseYear'],
+                'languageId' => (int) $validatedData['languageId'], // Conversion pour respecter le type attendu
+                'originalLanguageId' => isset($validatedData['originalLanguageId']) ? (int) $validatedData['originalLanguageId'] : null,
+                'rentalDuration' => (int) $validatedData['rentalDuration'],
+                'rentalRate' => (float) $validatedData['rentalRate'],
+                'length' => (int) $validatedData['length'],
+                'replacementCost' => (float) $validatedData['replacementCost'],
+                'rating' => $validatedData['rating'],
+                'lastUpdate' => now()->format('Y-m-d H:i:s'), // Formatage correct du timestamp
+                // 'idDirector' => (int) $validatedData['idDirector'], // Retiré car non utilisé par l'API
+            ]
+        ]);
+        $statusCode = $response->getStatusCode();
+        $body = $response->getBody()->getContents();
+
+        Log::info("Réponse API (Status: $statusCode): $body");
+
+        if ($response->getStatusCode() === 200) {
+            return redirect()->route('films.index')->with('success', 'Film ajouté avec succès.');
+        } else {
+            return redirect()->route('films.create')->with('error', 'Erreur lors de l\'ajout du film.');
+        }
+    } catch (\Exception $e) {
+        return redirect()->route('films.create')->with('error', 'Erreur: ' . $e->getMessage());
     }
-});
+})->name('films.add');
 
 
 require __DIR__.'/auth.php';

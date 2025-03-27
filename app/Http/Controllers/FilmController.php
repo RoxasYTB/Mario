@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class FilmController extends Controller
 {
@@ -26,24 +27,50 @@ class FilmController extends Controller
      * Ajouter un film
      */
     public function addFilm(Request $request)
-    {
-        $response = Http::post("{$this->baseUrl}/add", $request->only([
-            'title',
-            'description',
-            'releaseYear',
-            'languageId',
-            'originalLanguageId',
-            'rentalDuration',
-            'rentalRate',
-            'length',
-            'replacementCost',
-            'rating',
-            'lastUpdate',
-            'idDirector'
-        ]));
+{
+    try {
+        // Validation des données
+        $validatedData = $request->validate([
+            'title' => 'required|string',
+            'description' => 'required|string',
+            'releaseYear' => 'required|integer',
+            'rentalDuration' => 'required|integer|min:0|max:127',
+            'rentalRate' => 'required|numeric',
+            'length' => 'required|integer',
+            'replacementCost' => 'required|numeric',
+            'rating' => 'required|string',
+        ]);
 
-        return $response->json();
+        // Préparation des données avec les types corrects
+        $payload = [
+            'title' => $validatedData['title'],
+            'description' => $validatedData['description'],
+            'releaseYear' => (int) $validatedData['releaseYear'],
+            'languageId' => (int) $request->input('languageId', 1),
+            'originalLanguageId' => (int) $request->input('originalLanguageId', 1),
+            'rentalDuration' => (int) $validatedData['rentalDuration'],
+            'rentalRate' => (float) $validatedData['rentalRate'],
+            'length' => (int) $validatedData['length'],
+            'replacementCost' => (float) $validatedData['replacementCost'],
+            'rating' => $validatedData['rating'],
+        ];
+
+        // Appel à l'API Java avec debug
+        Log::info('Envoi de données à l\'API: ' . json_encode($payload));
+        $response = Http::post('http://localhost:8080/toad/film/add', $payload);
+
+        if ($response->successful()) {
+            return redirect()->route('filmlist')->with('success', 'Film ajouté avec succès!');
+        } else {
+            Log::error('Réponse API: ' . $response->body());
+            return redirect()->back()->with('error', 'Erreur lors de l\'ajout du film: ' . $response->body());
+        }
+    } catch (\Exception $e) {
+        Log::error('Exception: ' . $e->getMessage());
+        return redirect()->back()->with('error', 'Exception: ' . $e->getMessage());
     }
+}
+
 
     /**
      * Afficher les détails d'un film
@@ -94,16 +121,14 @@ class FilmController extends Controller
             'rentalRate' => 'required|numeric',
             'length' => 'required|integer',
             'replacementCost' => 'required|numeric',
-            'rating' => 'required|string|max:5',
-            'lastUpdate' => 'required|date',
-            'idDirector' => 'integer',
+            'rating' => 'required|string|max:5'
         ]);
 
         // Récupération des données nécessaires
         $data = $request->only([
             'title', 'description', 'releaseYear', 'languageId', 
             'originalLanguageId', 'rentalDuration', 'rentalRate', 
-            'length', 'replacementCost', 'rating', 'lastUpdate', 'idDirector'
+            'length', 'replacementCost', 'rating', 
         ]);
 
         // Appel de l'API pour mettre à jour le film
@@ -112,7 +137,7 @@ class FilmController extends Controller
         // Vérification de la réponse de l'API
         if ($response->failed()) {
             // Log de la réponse pour le débogage
-            \Log::error('Erreur lors de la mise à jour du film: ' . $response->body());
+            Log::error('Erreur lors de la mise à jour du film: ' . $response->body());
             return redirect()->back()->with('error', 'Erreur lors de la mise à jour du film.');
         }
 
@@ -162,6 +187,48 @@ class FilmController extends Controller
             return redirect()->route('filmlist')->with('success', 'Film ajouté avec succès.');
         } else {
             return redirect()->back()->with('error', 'Erreur lors de l\'ajout du film.');
+        }
+    }
+
+    public function updateFilm(Request $request, $id)
+    {
+        try {
+            // Validation similaire à celle de addFilm
+            $validatedData = $request->validate([
+                'title' => 'required|string',
+                'description' => 'required|string',
+                'releaseYear' => 'required|integer',
+                'rentalDuration' => 'required|integer',
+                'rentalRate' => 'required|numeric',
+                'length' => 'required|integer',
+                'replacementCost' => 'required|numeric',
+                'rating' => 'required|string',
+            ]);
+
+            // Format de la date au format Timestamp SQL attendu par Java
+            $timestamp = now();
+
+            $payload = [
+                'title' => $validatedData['title'],
+                'description' => $validatedData['description'],
+                'releaseYear' => (int) $validatedData['releaseYear'],
+                'rentalDuration' => (int) $validatedData['rentalDuration'],
+                'rentalRate' => (double) $validatedData['rentalRate'],
+                'length' => (int) $validatedData['length'],
+                'replacementCost' => (double) $validatedData['replacementCost'],
+                'rating' => $validatedData['rating'],
+                'lastUpdate' => $timestamp->toIso8601String() // Ajout de lastUpdate
+            ];
+
+            $response = Http::put('http://localhost:8080/toad/film/update/' . $id, $payload);
+
+            if ($response->successful()) {
+                return redirect()->route('filmlist')->with('success', 'Film mis à jour avec succès!');
+            } else {
+                return redirect()->back()->with('error', 'Erreur lors de la mise à jour du film: ' . $response->body());
+            }
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Exception: ' . $e->getMessage());
         }
     }
 }

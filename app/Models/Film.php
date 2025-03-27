@@ -21,17 +21,11 @@ class Film extends Model
         'length',
         'replacementCost',
         'rating',
-        'lastUpdate',
-        'idDirector',
         'specialFeatures', // Si vous avez des fonctionnalités spéciales
     ];
 
     // Si vous avez besoin de définir des relations, vous pouvez le faire ici
-    // Par exemple, si un film a un réalisateur, vous pouvez définir une relation
-    public function director()
-    {
-        return $this->belongsTo(Director::class, 'idDirector');
-    }
+    // Par exemple, si un film a un réalisateur, vous pouvez définir une relatio
 
     // Vous pouvez également ajouter des méthodes pour la validation ou d'autres logiques
     public static function rules()
@@ -47,8 +41,6 @@ class Film extends Model
             'length' => 'required|integer',
             'replacementCost' => 'required|numeric',
             'rating' => 'nullable|string|max:10',
-            'lastUpdate' => 'nullable|date',
-            'idDirector' => 'required|integer',
             'specialFeatures' => 'nullable|string',
         ];
     }
