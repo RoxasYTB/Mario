@@ -14,4 +14,7 @@
             </div>
         </div>
     </div>
+    <script>
+        location.href = "/filmlist";
+    </script>
 </x-app-layout>

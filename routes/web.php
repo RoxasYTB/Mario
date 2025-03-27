@@ -18,6 +18,10 @@ Route::get('/filmlist', function () {
     return view('filmlist');
 })->middleware(['auth', 'verified'])->name('filmlist');
 
+Route::get('/loginstaff', function () {
+    return view('loginstaff');
+})->middleware(['auth', 'verified'])->name('loginstaff');
+
 Route::get('/filmdetail', function () {
     return view('filmdetail');
 })->middleware(['auth', 'verified'])->name('filmdetail');
