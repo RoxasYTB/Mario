@@ -8,9 +8,7 @@
 
     <div class="search-container">
         <input type="search" id="searchQuery" class="search-input" placeholder="Rechercher un film...">
-            <button class="search-button">
-                <img src="{{ asset('img/loupe.png') }}" alt="Search" class="search-icon">
-            </button>
+        
     </div>
 <br>
     <div class="wrapper">
