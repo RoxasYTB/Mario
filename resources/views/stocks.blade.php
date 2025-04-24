@@ -146,18 +146,65 @@
             
             filmTableBody.innerHTML = '';
             
-            currentPageItems.forEach(film => {
+            currentPageItems.forEach((film, idx) => {
+                // Générer un id unique pour chaque ligne
+                const rowId = `film-row-${startIndex + idx}`;
+                const dispoId = `dispo-${startIndex + idx}`;
+                const louesId = `loues-${startIndex + idx}`;
+                // On stocke les valeurs initiales pour chaque ligne
+                const filmsDisponibles = film.filmsDisponibles ?? 0;
+                const totalLoues = film.totalLoues ?? 0;
+                const totalStock = film.totalStock ?? 0;
+
                 const row = document.createElement('tr');
+                row.id = rowId;
                 row.innerHTML = `
                     <td>${film.title || 'Titre inconnu'}</td>
-                    <td>${film.filmsDisponibles ?? 'N/A'}</td>
-                    <td>${film.totalStock ?? 'N/A'}</td>
-                    <td>${film.totalLoues ?? 'N/A'}</td>
+                    <td id="${dispoId}">${filmsDisponibles}</td>
+                    <td>${totalStock}</td>
+                    <td>
+                        <button class="loues-btn" data-action="minus" data-row="${startIndex + idx}">-</button>
+                        <span id="${louesId}">${totalLoues}</span>
+                        <button class="loues-btn" data-action="plus" data-row="${startIndex + idx}">+</button>
+                    </td>
                 `;
                 filmTableBody.appendChild(row);
             });
 
-            // Mettre à jour l'état des boutons de pagination
+            // Ajouter les listeners pour les boutons + et -
+            document.querySelectorAll('.loues-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const rowIdx = parseInt(this.getAttribute('data-row'));
+                    const action = this.getAttribute('data-action');
+                    const film = filteredFilms[rowIdx];
+                    const dispoId = `dispo-${rowIdx}`;
+                    const louesId = `loues-${rowIdx}`;
+                    const dispoElem = document.getElementById(dispoId);
+                    const louesElem = document.getElementById(louesId);
+
+                    let dispo = parseInt(dispoElem.textContent);
+                    let loues = parseInt(louesElem.textContent);
+                    const totalStock = film.totalStock ?? 0;
+
+                    if (action === 'plus' && dispo > 0) {
+                        loues += 1;
+                        dispo -= 1;
+                    } else if (action === 'minus' && loues > 0) {
+                        loues -= 1;
+                        dispo += 1;
+                    }
+                    // Empêcher de dépasser les bornes
+                    if (loues < 0) loues = 0;
+                    if (dispo < 0) dispo = 0;
+                    if (loues + dispo > totalStock) {
+                        dispo = totalStock - loues;
+                    }
+
+                    louesElem.textContent = loues;
+                    dispoElem.textContent = dispo;
+                });
+            });
+
             document.getElementById('prev-page').disabled = page === 1;
             document.getElementById('next-page').disabled = page === totalPages;
 
@@ -380,6 +427,23 @@
         display: flex;
         align-items: center;
         font-weight: bold;
+    }
+
+    /* Style pour les boutons + et - */
+    .loues-btn {
+        padding: 4px 10px;
+        margin: 0 4px;
+        background: #0077cc;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .loues-btn:hover {
+        background: #005fa3;
     }
 </style>
 
