@@ -33,11 +33,14 @@ Route::get('/detail', function () {
     return view('detail');
 });
 
-
-// Add this new route to proxy the stock film data
 Route::get('/stock-films', function () {
     try {
-        $response = Http::get('http://localhost:8080/toad/inventory/stockFilm');
+        $server = env('SERVEUR', 'localhost');
+        $port = env('PORT', '8080');
+        $baseUrl = "{$server}{$port}";
+        $url = "http://{$baseUrl}/toad/inventory/stockFilm";
+
+        $response = Http::get($url);
 
         if ($response->successful()) {
             return $response->json();
